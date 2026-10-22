@@ -24,7 +24,7 @@ English: [Multi-Project Management & Focus](docs/USER_GUIDE.en.md)
 
 把不同项目中的任务放到同一张重要/紧急四象限里比较。它关注的是当前全部任务的整体分配，而不是只盯着某一个项目。
 
-![跨项目四象限示例](docs/screenshots/quadrant-overview.svg)
+![跨项目四象限示例](docs/screenshots/quadrant-overview.png)
 
 ### 3. 把今天要办的事情集中到一块
 
