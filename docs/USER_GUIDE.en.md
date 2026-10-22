@@ -2,7 +2,7 @@
 
 ## 1. What it is for
 
-This native macOS app is for people moving several research, work, or personal projects forward while keeping each day small and clear. It keeps long-term direction visible without turning life into a pressure-driven checklist.
+This native macOS app helps you manage several tasks at once, see how far each task has progressed, decide how much to move each one forward today, and allocate time and attention more deliberately.
 
 ## 2. Core workflow
 
