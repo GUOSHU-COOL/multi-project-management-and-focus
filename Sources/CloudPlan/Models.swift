@@ -59,6 +59,7 @@ struct PlanTask: Codable, Identifiable, Hashable {
     var expectedDate: Date?
     var durationMinutes: Int
     var isCompleted: Bool
+    var completedAt: Date? = nil
     var order: Int
     /// 思维导图中的手动位置；nil 表示使用自动树布局。
     var mapX: Double? = nil
@@ -89,6 +90,7 @@ struct TodayTask: Codable, Identifiable, Hashable {
     var time: String
     var durationMinutes: Int
     var isCompleted: Bool
+    var completedAt: Date? = nil
     var order: Int
 }
 

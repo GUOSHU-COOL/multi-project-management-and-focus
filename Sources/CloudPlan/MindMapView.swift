@@ -20,6 +20,7 @@ struct MindMapView: View {
     @State private var canvasScrollView: NSScrollView?
     @State private var linkModeEnabled = false
     @State private var linkSourceID: UUID?
+    @State private var mapScale: CGFloat = 1
 
     private let nodeWidth: CGFloat = 210
 
@@ -130,6 +131,10 @@ struct MindMapView: View {
                         }
                         }
                         .frame(width: canvasSize.width, height: canvasSize.height)
+                        .scaleEffect(mapScale, anchor: .topLeading)
+                        .gesture(MagnificationGesture().onChanged { value in
+                            mapScale = min(1.6, max(0.65, value))
+                        })
                         .coordinateSpace(name: "mindMap")
                         .animation(.spring(response: 0.34, dampingFraction: 0.78), value: visibleTaskIDs)
                         .background {
@@ -197,6 +202,22 @@ struct MindMapView: View {
                     }
                     .buttonStyle(.bordered)
                     .help("按任务层级重新排版")
+
+                    HStack(spacing: 6) {
+                        Button { mapScale = max(0.65, mapScale - 0.1) } label: {
+                            Image(systemName: "minus.magnifyingglass")
+                        }
+                        .buttonStyle(.bordered)
+                        Text("\(Int(mapScale * 100))%")
+                            .font(.caption.monospacedDigit())
+                            .frame(width: 42)
+                        Button { mapScale = min(1.6, mapScale + 0.1) } label: {
+                            Image(systemName: "plus.magnifyingglass")
+                        }
+                        .buttonStyle(.bordered)
+                        Button("重置") { mapScale = 1 }
+                            .buttonStyle(.bordered)
+                    }
                 }
                 .padding(12)
             }

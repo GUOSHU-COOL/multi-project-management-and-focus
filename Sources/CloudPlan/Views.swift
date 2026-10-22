@@ -1119,6 +1119,10 @@ struct TodayPanel: View {
             }
         }
         .padding(6)
+        .onAppear { store.purgeExpiredCompletedTodayTasks() }
+        .onReceive(Timer.publish(every: 30, on: .main, in: .common).autoconnect()) { _ in
+            store.purgeExpiredCompletedTodayTasks()
+        }
         .onChange(of: focusQuickAdd) { _, shouldFocus in
             if shouldFocus {
                 isQuickAddFocused = true
@@ -1131,11 +1135,11 @@ struct TodayPanel: View {
     }
 
     private var todaySummary: some View {
-        let total = store.data.todayTasks.count
+        let total = store.orderedTodayTasks.count
         return VStack(alignment: .trailing, spacing: 3) {
             Text(total == 0 ? "自由的一天" : "\(store.completedCount) / \(total) 完成")
                 .font(.caption.weight(.semibold))
-            Text("约 \(store.data.todayTasks.reduce(0) { $0 + $1.durationMinutes }) 分钟")
+            Text("约 \(store.orderedTodayTasks.reduce(0) { $0 + $1.durationMinutes }) 分钟")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -1466,6 +1470,14 @@ struct RoutinePanel: View {
                             }
                             .padding(13)
                             .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12))
+                            .contextMenu {
+                                Button("编辑长期任务…", systemImage: "pencil") { editingRoutine = routine }
+                                Button("放到今天", systemImage: "sun.max") { store.scheduleRoutine(routine) }
+                                Divider()
+                                Button("删除长期任务", systemImage: "trash", role: .destructive) {
+                                    store.deleteRoutine(routine.id)
+                                }
+                            }
                         }
                     }
                     .padding(14)
@@ -2181,6 +2193,9 @@ struct AIAssistantView: View {
                     }
                     AIPromptChip(title: "安排今天", symbol: "sun.max") {
                         instruction = "请挑出今天最值得推进且不过载的任务，安排到今天，并给出合理时间。"
+                    }
+                    AIPromptChip(title: "生成下一步任务", symbol: "plus.circle") {
+                        instruction = "请根据当前项目和已有任务，找出尚未覆盖的关键下一步，生成少量具体、可执行的新任务。保留已有内容，不重复创建；新任务要说明属于哪个项目、为什么现在值得做，以及建议时长。"
                     }
                 }
             }

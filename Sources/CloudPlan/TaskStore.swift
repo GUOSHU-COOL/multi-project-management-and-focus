@@ -72,10 +72,23 @@ final class TaskStore: ObservableObject {
     }
 
     var orderedTodayTasks: [TodayTask] {
-        data.todayTasks.sorted { $0.order < $1.order }
+        data.todayTasks.filter { !isExpiredCompleted($0) }.sorted { $0.order < $1.order }
     }
 
-    var completedCount: Int { data.todayTasks.filter(\.isCompleted).count }
+    var completedCount: Int { orderedTodayTasks.filter(\.isCompleted).count }
+
+    private func isExpiredCompleted(_ task: TodayTask) -> Bool {
+        task.isCompleted && task.completedAt.map { Date().timeIntervalSince($0) >= 15 * 60 } == true
+    }
+
+    func purgeExpiredCompletedTodayTasks() {
+        let expired = data.todayTasks.filter(isExpiredCompleted).map(\.id)
+        guard !expired.isEmpty else { return }
+        mutate { data in
+            data.todayTasks.removeAll { expired.contains($0.id) }
+            for index in data.todayTasks.indices { data.todayTasks[index].order = index }
+        }
+    }
 
     /// 当前项目里两端都还存在的导图连接线。
     var selectedMapLinks: [MapLink] {
@@ -368,8 +381,10 @@ final class TaskStore: ObservableObject {
         mutate { data in
             guard let index = data.planTasks.firstIndex(where: { $0.id == taskID }) else { return }
             data.planTasks[index].isCompleted = isCompleted
+            data.planTasks[index].completedAt = isCompleted ? Date() : nil
             for todayIndex in data.todayTasks.indices where data.todayTasks[todayIndex].sourceID == taskID {
                 data.todayTasks[todayIndex].isCompleted = isCompleted
+                data.todayTasks[todayIndex].completedAt = isCompleted ? Date() : nil
             }
         }
     }
@@ -430,9 +445,11 @@ final class TaskStore: ObservableObject {
         mutate { data in
             guard let index = data.todayTasks.firstIndex(where: { $0.id == id }) else { return }
             data.todayTasks[index].isCompleted.toggle()
+            data.todayTasks[index].completedAt = data.todayTasks[index].isCompleted ? Date() : nil
             if let sourceID = data.todayTasks[index].sourceID,
                let planIndex = data.planTasks.firstIndex(where: { $0.id == sourceID }) {
                 data.planTasks[planIndex].isCompleted = data.todayTasks[index].isCompleted
+                data.planTasks[planIndex].completedAt = data.todayTasks[index].completedAt
             }
         }
     }
@@ -477,6 +494,14 @@ final class TaskStore: ObservableObject {
         if data.todayTasks.contains(where: { $0.sourceID == routine.id }) { return }
         let item = TodayTask(id: UUID(), sourceID: routine.id, source: .routine, title: routine.title, note: routine.detail, time: nextSuggestedTime(), durationMinutes: 30, isCompleted: false, order: data.todayTasks.count)
         mutate { $0.todayTasks.append(item) }
+    }
+
+    func deleteRoutine(_ routineID: UUID) {
+        mutate { data in
+            data.routines.removeAll { $0.id == routineID }
+            data.todayTasks.removeAll { $0.sourceID == routineID }
+            for index in data.todayTasks.indices { data.todayTasks[index].order = index }
+        }
     }
 
     func exportAIContext(projectID: UUID? = nil) -> String {

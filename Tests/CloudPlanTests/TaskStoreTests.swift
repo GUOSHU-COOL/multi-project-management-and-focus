@@ -11,6 +11,33 @@ struct TaskStoreTests {
             .appendingPathComponent("workspace.json")
     }
 
+    @Test("完成超过十五分钟的今日任务会被清理")
+    func expiredCompletedTodayTaskIsPurged() throws {
+        let url = temporaryURL()
+        let oldTask = TodayTask(id: UUID(), sourceID: nil, source: .spontaneous, title: "旧任务", note: "", time: "09:00", durationMinutes: 15, isCompleted: true, completedAt: Date().addingTimeInterval(-16 * 60), order: 0)
+        var workspace = WorkspaceData(projects: [], planTasks: [], todayTasks: [oldTask], routines: [], schemaVersion: 6)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(workspace).write(to: url)
+        let store = TaskStore(fileURL: url)
+        #expect(store.orderedTodayTasks.isEmpty)
+        store.purgeExpiredCompletedTodayTasks()
+        #expect(store.data.todayTasks.isEmpty)
+        workspace.todayTasks = []
+    }
+
+    @Test("删除长期任务会同步移除今日副本")
+    func deletingRoutineRemovesTodayCopy() throws {
+        let store = TaskStore(fileURL: temporaryURL())
+        store.addRoutine(title: "每日练习", repeatRule: "每天")
+        let routine = try #require(store.data.routines.first)
+        store.scheduleRoutine(routine)
+        store.deleteRoutine(routine.id)
+        #expect(store.data.routines.isEmpty)
+        #expect(store.data.todayTasks.isEmpty)
+    }
+
     @Test("无归属快记与每日任务共享状态并持久化")
     func quadrantQuickNoteSharesTodayState() throws {
         let url = temporaryURL()
