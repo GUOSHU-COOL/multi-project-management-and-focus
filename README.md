@@ -4,6 +4,10 @@
 
 English: [Multi-Project Management & Focus](docs/USER_GUIDE.en.md)
 
+## 使用与版权
+
+本仓库公开可见，允许个人学习、研究、运行和非商业修改；未经书面许可，不得商业使用、销售、公开再发布或移除版权声明。详见 [LICENSE.md](LICENSE.md)。公开仓库无法从技术上阻止复制；如果需要更强保护，应使用私有仓库。
+
 ## 已有能力
 
 - 海蓝、天蓝与奶白云朵的原生 SwiftUI 界面
