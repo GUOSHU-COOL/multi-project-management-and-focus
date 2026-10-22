@@ -456,7 +456,40 @@ private struct QuadrantCell: View {
 
     private var tasks: [PlanTask] { store.tasks(in: quadrant) }
 
-    private var quickNotes: [TodayTask] { store.orderedTodayTasks.filter { $0.quadrant == quadrant } }
+    private var quickNotes: [TodayTask] {
+        store.orderedTodayTasks
+            .filter { $0.quadrant == quadrant }
+            .sorted { !$0.isCompleted && $1.isCompleted }
+    }
+
+    private struct TaskGroup: Identifiable {
+        let id: UUID
+        let title: String
+        let tasks: [PlanTask]
+    }
+
+    private var groupedTasks: [TaskGroup] {
+        let byID = Dictionary(uniqueKeysWithValues: store.data.planTasks.map { ($0.id, $0) })
+        let groups = Dictionary(grouping: tasks) { task -> UUID in
+            var current = task
+            while let parentID = current.parentID, let parent = byID[parentID] {
+                current = parent
+            }
+            return current.id
+        }
+        return groups.compactMap { id, group in
+            guard let root = byID[id] else { return nil }
+            return TaskGroup(
+                id: id,
+                title: root.title,
+                tasks: group.sorted { lhs, rhs in
+                    if lhs.isCompleted != rhs.isCompleted { return !lhs.isCompleted }
+                    return lhs.order < rhs.order
+                }
+            )
+        }
+        .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
     private var taskCount: Int { tasks.count + quickNotes.count }
 
     var body: some View {
@@ -494,20 +527,27 @@ private struct QuadrantCell: View {
                     ForEach(quickNotes) { task in
                         QuadrantQuickNoteCard(task: task)
                     }
-                    ForEach(tasks) { task in
-                        PriorityTaskCard(task: task, quadrant: quadrant)
-                            .onDrop(
-                                of: [UTType.text.identifier],
-                                delegate: QuadrantDropDelegate(
-                                    quadrant: quadrant,
-                                    targetID: task.id,
-                                    store: store,
-                                    isTargeted: .constant(false)
-                                )
-                            )
+                    ForEach(groupedTasks) { group in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(group.title, systemImage: "arrow.turn.down.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            ForEach(group.tasks) { task in
+                                PriorityTaskCard(task: task, quadrant: quadrant)
+                                    .onDrop(
+                                        of: [UTType.text.identifier],
+                                        delegate: QuadrantDropDelegate(
+                                            quadrant: quadrant,
+                                            targetID: task.id,
+                                            store: store,
+                                            isTargeted: .constant(false)
+                                        )
+                                    )
+                            }
                     }
                 }
             }
+        }
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)

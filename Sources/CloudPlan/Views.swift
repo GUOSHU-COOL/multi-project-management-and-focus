@@ -1498,8 +1498,9 @@ struct RoutinePanel: View {
         }
         .padding(6)
         .sheet(item: $editingRoutine) { routine in
-            RoutineFrequencyEditor(routine: routine) { updatedRule in
+            RoutineFrequencyEditor(routine: routine) { updatedTitle, updatedRule in
                 var updated = routine
+                updated.title = updatedTitle
                 updated.repeatRule = updatedRule
                 store.updateRoutine(updated)
             }
@@ -1509,11 +1510,12 @@ struct RoutinePanel: View {
 
 struct RoutineFrequencyEditor: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var title: String
     @State private var selection: String
     @State private var customRule: String
 
     let routine: RoutineTask
-    let onSave: (String) -> Void
+    let onSave: (String, String) -> Void
 
     private let presets = [
         "每天",
@@ -1526,9 +1528,10 @@ struct RoutineFrequencyEditor: View {
     ]
     private let customTag = "__custom__"
 
-    init(routine: RoutineTask, onSave: @escaping (String) -> Void) {
+    init(routine: RoutineTask, onSave: @escaping (String, String) -> Void) {
         self.routine = routine
         self.onSave = onSave
+        _title = State(initialValue: routine.title)
         let current = routine.repeatRule.trimmingCharacters(in: .whitespacesAndNewlines)
         if [
             "每天", "每周", "每周 2 次", "每周 3 次", "每周 5 次", "每周日", "每月"
@@ -1557,6 +1560,10 @@ struct RoutineFrequencyEditor: View {
             Divider().opacity(0.5)
 
             VStack(alignment: .leading, spacing: 18) {
+                EditorField("长期任务名称", symbol: "textformat") {
+                    TextField("任务名称", text: $title)
+                        .quietInput()
+                }
                 EditorField("重复频率", symbol: "repeat") {
                     Picker("重复频率", selection: $selection) {
                         ForEach(presets, id: \.self) { preset in
@@ -1585,15 +1592,15 @@ struct RoutineFrequencyEditor: View {
                 Button("取消") { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button {
-                    onSave(resolvedRule)
+                    onSave(title.trimmingCharacters(in: .whitespacesAndNewlines), resolvedRule)
                     dismiss()
                 } label: {
-                    Label("保存频率", systemImage: "checkmark")
+                    Label("保存", systemImage: "checkmark")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .keyboardShortcut(.defaultAction)
-                .disabled(resolvedRule.isEmpty)
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || resolvedRule.isEmpty)
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 18)

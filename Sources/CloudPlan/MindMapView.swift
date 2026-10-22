@@ -21,6 +21,7 @@ struct MindMapView: View {
     @State private var linkModeEnabled = false
     @State private var linkSourceID: UUID?
     @State private var mapScale: CGFloat = 1
+    @State private var zoomStart: CGFloat = 1
 
     private let nodeWidth: CGFloat = 210
 
@@ -132,8 +133,10 @@ struct MindMapView: View {
                         }
                         .frame(width: canvasSize.width, height: canvasSize.height)
                         .scaleEffect(mapScale, anchor: .topLeading)
-                        .gesture(MagnificationGesture().onChanged { value in
-                            mapScale = min(1.6, max(0.65, value))
+                        .simultaneousGesture(MagnificationGesture().onChanged { value in
+                            mapScale = min(1.6, max(0.65, zoomStart * value))
+                        }.onEnded { _ in
+                            zoomStart = mapScale
                         })
                         .coordinateSpace(name: "mindMap")
                         .animation(.spring(response: 0.34, dampingFraction: 0.78), value: visibleTaskIDs)
