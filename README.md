@@ -24,15 +24,14 @@ English: [Multi-Project Management & Focus](docs/USER_GUIDE.en.md)
 
 把不同项目中的任务放到同一张重要/紧急四象限里比较。它关注的是当前全部任务的整体分配，而不是只盯着某一个项目。
 
+![跨项目四象限示例](docs/screenshots/quadrant-overview.svg)
+
 ### 3. 把今天要办的事情集中到一块
 
 来自不同项目的行动、长期任务和临时想到的事情，都可以进入同一个“今天”列表。你可以统一排序、估算时间、完成任务，再回到各自项目继续推进。
 
 ![项目计划与今日行动并排](docs/screenshots/today-board.png)
 
-空间较窄时，计划区和今日区会自动上下排列：
-
-![窄窗口布局](docs/screenshots/narrow-layout.png)
 
 ## 使用
 
