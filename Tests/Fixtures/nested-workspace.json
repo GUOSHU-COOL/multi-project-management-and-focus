@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 2,
+  "projects": [
+    {
+      "id": "B0000000-0000-0000-0000-000000000001",
+      "title": "像云一样生活",
+      "detail": "从愿望长出今天可以开始的行动",
+      "symbol": "cloud.sun.fill"
+    }
+  ],
+  "planTasks": [
+    {
+      "id": "B1000000-0000-0000-0000-000000000001",
+      "projectID": "B0000000-0000-0000-0000-000000000001",
+      "parentID": null,
+      "title": "找到更自由的工作方式",
+      "note": "先理解自己想要怎样的一天",
+      "goal": "明确方向",
+      "expectedDate": null,
+      "durationMinutes": 60,
+      "isCompleted": false,
+      "order": 0,
+      "mapX": null,
+      "mapY": null
+    },
+    {
+      "id": "B2000000-0000-0000-0000-000000000001",
+      "projectID": "B0000000-0000-0000-0000-000000000001",
+      "parentID": "B1000000-0000-0000-0000-000000000001",
+      "title": "盘点真正重要的能力",
+      "note": "只保留愿意长期积累的部分",
+      "goal": "列出三项能力",
+      "expectedDate": null,
+      "durationMinutes": 35,
+      "isCompleted": false,
+      "order": 0,
+      "mapX": null,
+      "mapY": null
+    },
+    {
+      "id": "B3000000-0000-0000-0000-000000000001",
+      "projectID": "B0000000-0000-0000-0000-000000000001",
+      "parentID": "B2000000-0000-0000-0000-000000000001",
+      "title": "写下一个月的练习计划",
+      "note": "每周只安排一个重点",
+      "goal": "形成轻量节奏",
+      "expectedDate": null,
+      "durationMinutes": 30,
+      "isCompleted": false,
+      "order": 0,
+      "mapX": null,
+      "mapY": null
+    },
+    {
+      "id": "B2000000-0000-0000-0000-000000000002",
+      "projectID": "B0000000-0000-0000-0000-000000000001",
+      "parentID": "B1000000-0000-0000-0000-000000000001",
+      "title": "设计理想的一天",
+      "note": "工作、休息和自由时间都有位置",
+      "goal": "画出时间草图",
+      "expectedDate": null,
+      "durationMinutes": 25,
+      "isCompleted": false,
+      "order": 1,
+      "mapX": null,
+      "mapY": null
+    },
+    {
+      "id": "B1000000-0000-0000-0000-000000000002",
+      "projectID": "B0000000-0000-0000-0000-000000000001",
+      "parentID": null,
+      "title": "留出真正属于自己的时间",
+      "note": "不把每一分钟都变成任务",
+      "goal": "每周半天空白",
+      "expectedDate": null,
+      "durationMinutes": 20,
+      "isCompleted": false,
+      "order": 1,
+      "mapX": null,
+      "mapY": null
+    }
+  ],
+  "todayTasks": [
+    {
+      "id": "C0000000-0000-0000-0000-000000000001",
+      "sourceID": "B3000000-0000-0000-0000-000000000001",
+      "source": "project",
+      "title": "写下一个月的练习计划",
+      "note": "每周只安排一个重点",
+      "time": "10:00",
+      "durationMinutes": 30,
+      "isCompleted": false,
+      "order": 0
+    }
+  ],
+  "routines": []
+}

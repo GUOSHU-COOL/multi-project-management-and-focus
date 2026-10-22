@@ -1,0 +1,1923 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>时间项目规划软件</title>
+    <style>
+      :root {
+        --bg: #f6f7f8;
+        --panel: #ffffff;
+        --line: #dde2e7;
+        --text: #20242a;
+        --muted: #6d7680;
+        --accent: #2f6fed;
+        --accent-soft: #e9f0ff;
+        --active: #fff2bf;
+        --shadow: 0 10px 30px rgba(20, 31, 45, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      header {
+        height: 64px;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(12px);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 700;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button.active {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      button.small {
+        height: 28px;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      main {
+        min-height: 0;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: minmax(340px, 1fr) minmax(300px, 420px) minmax(320px, 440px);
+        gap: 16px;
+      }
+
+      .panel {
+        min-height: 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        min-height: 54px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .panel-subtitle {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .project-body,
+      .today-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 16px;
+      }
+
+      .today-body {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .add-project {
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: minmax(130px, 1.2fr) minmax(120px, 1fr) auto;
+        gap: 8px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcfd;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0 10px;
+        color: var(--text);
+        background: #fff;
+        font: inherit;
+        font-size: 14px;
+      }
+
+      input,
+      select {
+        height: 34px;
+      }
+
+      textarea {
+        min-height: 66px;
+        padding: 9px 10px;
+        resize: vertical;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid var(--accent-soft);
+        border-color: var(--accent);
+      }
+
+      label {
+        display: grid;
+        gap: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .form-grid {
+        padding: 12px 16px;
+        display: grid;
+        gap: 8px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcfd;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .section-block {
+        display: grid;
+        gap: 10px;
+      }
+
+      .section-title {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .plan-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .plan-node {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fff;
+        transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      }
+
+      .plan-node.is-parent {
+        background: #fbfcfd;
+      }
+
+      .plan-node.is-highlighted {
+        background: var(--active);
+        border-color: #e1b900;
+      }
+
+      .plan-node.dragging {
+        opacity: 0.55;
+        transform: scale(0.99);
+      }
+
+      .node-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .node-actions {
+        flex: none;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .node-name {
+        font-weight: 650;
+      }
+
+      .node-meta {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .node-goal {
+        margin-top: 7px;
+        padding: 7px 8px;
+        border-radius: 7px;
+        background: #f7f9fb;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .children {
+        margin-top: 10px;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+        border-left: 2px solid var(--line);
+      }
+
+      .child-form {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: minmax(120px, 1fr) minmax(100px, 0.8fr) auto;
+        gap: 8px;
+      }
+
+      .goal-form {
+        margin-top: 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .chip {
+        flex: none;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      .mindmap {
+        min-width: 820px;
+        min-height: 560px;
+        position: relative;
+      }
+
+      .mind-node {
+        position: absolute;
+        width: 156px;
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 6px 18px rgba(30, 42, 60, 0.08);
+        cursor: grab;
+        user-select: none;
+        touch-action: none;
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .mind-node.is-moving {
+        cursor: grabbing;
+        z-index: 3;
+      }
+
+      .mind-node.is-highlighted {
+        background: var(--active);
+        border-color: #e1b900;
+      }
+
+      .mind-title {
+        font-weight: 650;
+        font-size: 13px;
+      }
+
+      .mind-note {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .mind-goal {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .mind-actions {
+        margin-top: 8px;
+      }
+
+      .mind-node .child-form {
+        grid-template-columns: 1fr;
+      }
+
+      .mind-node .goal-form {
+        grid-template-columns: 1fr;
+      }
+
+      .guide {
+        position: absolute;
+        z-index: 2;
+        pointer-events: none;
+        background: rgba(47, 111, 237, 0.55);
+      }
+
+      .guide-x {
+        width: 1px;
+        top: 0;
+        bottom: 0;
+      }
+
+      .guide-y {
+        height: 1px;
+        left: 0;
+        right: 0;
+      }
+
+      .dock-preview {
+        position: absolute;
+        z-index: 1;
+        width: 156px;
+        min-height: 58px;
+        border: 2px solid rgba(47, 111, 237, 0.55);
+        border-radius: 8px;
+        background: rgba(47, 111, 237, 0.08);
+        pointer-events: none;
+        display: none;
+      }
+
+      svg.lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .dropzone {
+        min-height: 150px;
+        border: 1px dashed transparent;
+        border-radius: 8px;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .dropzone.over {
+        border-color: var(--accent);
+        background: #f5f8ff;
+      }
+
+      .today-item {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        background: #fff;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 8px;
+        align-items: start;
+        cursor: grab;
+      }
+
+      .today-item:active {
+        cursor: grabbing;
+      }
+
+      .today-item.dragging {
+        opacity: 0.55;
+      }
+
+      .today-item strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .today-item input {
+        width: auto;
+        height: auto;
+        margin-top: 3px;
+      }
+
+      .today-time {
+        width: 86px;
+        height: 30px;
+        padding: 0 6px;
+        font-size: 12px;
+      }
+
+      .today-item.done strong,
+      .today-item.done span,
+      .long-today-item.done strong,
+      .long-today-item.done span {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      .casual-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+
+      .task-list,
+      .long-list,
+      .review-list,
+      .long-today-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .casual-item,
+      .long-item,
+      .review-item,
+      .long-today-item {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 10px;
+      }
+
+      .casual-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .casual-item.done span {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      .casual-item input {
+        width: auto;
+        height: auto;
+      }
+
+      .long-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 16px;
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .long-item h3 {
+        margin: 0 0 5px;
+        font-size: 15px;
+      }
+
+      .long-meta,
+      .milestone,
+      .review-item,
+      .long-today-item {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .long-today-item {
+        border-left: 4px solid #20a06b;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px;
+        align-items: start;
+      }
+
+      .long-today-item input {
+        width: auto;
+        height: auto;
+        margin-top: 3px;
+      }
+
+      .long-today-item strong {
+        color: var(--text);
+      }
+
+      .milestone {
+        margin-top: 8px;
+        padding: 8px;
+        background: #f7f9fb;
+        border-radius: 7px;
+      }
+
+      .context-menu {
+        position: fixed;
+        z-index: 20;
+        min-width: 132px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        display: none;
+      }
+
+      .context-menu button {
+        width: 100%;
+        justify-content: flex-start;
+        border: 0;
+        background: transparent;
+        text-align: left;
+      }
+
+      .context-menu button:hover {
+        background: #f2f5f8;
+      }
+
+      .empty {
+        height: 160px;
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        text-align: center;
+        padding: 20px;
+      }
+
+      @media (max-width: 860px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        .add-project,
+        .child-form {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div>
+          <h1>时间项目规划软件</h1>
+        </div>
+        <div class="toolbar" aria-label="视图切换">
+          <button id="listBtn" class="active" type="button">计划列表</button>
+          <button id="mapBtn" type="button">思维导图</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="panel" aria-label="项目计划">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">项目计划</h2>
+              <p class="panel-subtitle">把计划节点拖到右侧，今日安排会反向点亮这里</p>
+            </div>
+          </div>
+          <form id="addProjectForm" class="add-project">
+            <input id="projectNameInput" name="projectName" placeholder="新项目名称" autocomplete="off" />
+            <input id="projectMetaInput" name="projectMeta" placeholder="备注，比如 产品主线" autocomplete="off" />
+            <button class="primary" type="submit">添加项目</button>
+          </form>
+          <div id="projectBody" class="project-body"></div>
+        </section>
+
+        <section class="panel" aria-label="今日安排">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">今日安排</h2>
+              <p class="panel-subtitle">从项目结构中抽取今天真正要做的部分</p>
+            </div>
+            <button id="clearBtn" type="button">清空</button>
+          </div>
+          <div class="today-body">
+            <div class="section-block">
+              <p class="section-title">项目推进</p>
+              <div id="dropzone" class="dropzone"></div>
+            </div>
+
+            <div class="section-block">
+              <p class="section-title">长期主义今日任务</p>
+              <div id="longTodayList" class="long-today-list"></div>
+            </div>
+
+            <div class="section-block">
+              <p class="section-title">随性任务栏</p>
+              <form id="casualForm" class="casual-form">
+                <input id="casualInput" placeholder="临时想到的事，比如 买咖啡豆" autocomplete="off" />
+                <button class="primary" type="submit">添加</button>
+              </form>
+              <div id="casualList" class="task-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="长期主义">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">长期主义</h2>
+              <p class="panel-subtitle">里程碑、重复节奏、记忆曲线复习</p>
+            </div>
+          </div>
+          <form id="longForm" class="form-grid">
+            <input id="longNameInput" placeholder="长期任务，比如 背单词" autocomplete="off" />
+            <div class="form-row">
+              <input id="milestoneDateInput" type="date" />
+              <input id="milestoneTextInput" placeholder="里程碑：达到什么" autocomplete="off" />
+            </div>
+            <div class="form-row">
+              <label>
+                重复方式
+                <select id="repeatTypeInput">
+                  <option value="none">不重复</option>
+                  <option value="weekly-day">每周某天</option>
+                  <option value="weekly-times">每周几次</option>
+                  <option value="memory">记忆曲线</option>
+                </select>
+              </label>
+              <label>
+                开始日期
+                <input id="startDateInput" type="date" />
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                星期
+                <select id="weekdayInput">
+                  <option value="1">周一</option>
+                  <option value="2">周二</option>
+                  <option value="3">周三</option>
+                  <option value="4">周四</option>
+                  <option value="5">周五</option>
+                  <option value="6">周六</option>
+                  <option value="0">周日</option>
+                </select>
+              </label>
+              <label>
+                每周次数
+                <input id="weeklyTimesInput" type="number" min="1" max="7" value="3" />
+              </label>
+            </div>
+            <div class="form-row">
+              <button id="longSubmitBtn" class="primary" type="submit">添加长期任务</button>
+              <button id="cancelLongEditBtn" class="ghost" type="button" hidden>取消修改</button>
+            </div>
+          </form>
+          <div class="long-body">
+            <div class="section-block">
+              <p class="section-title">今天该复习</p>
+              <div id="reviewList" class="review-list"></div>
+            </div>
+            <div class="section-block">
+              <p class="section-title">长期任务</p>
+              <div id="longList" class="long-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="contextMenu" class="context-menu"></div>
+
+    <script>
+      const STORAGE_KEY = "time-project-planner-state-v1";
+      const MEMORY_INTERVALS = [0, 1, 3, 7, 14, 30];
+      const WEEKDAY_NAMES = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+      const defaultPlan = [
+        {
+          id: "p1",
+          name: "时间项目规划软件",
+          meta: "产品主线",
+          children: [
+            { id: "p1-1", name: "双窗口工作台", meta: "项目计划 + 今日安排" },
+            { id: "p1-2", name: "拖动分配今日任务", meta: "拖动后高亮原计划节点" },
+            { id: "p1-3", name: "思维导图计划视图", meta: "支持非线性项目结构" },
+          ],
+        },
+        {
+          id: "p2",
+          name: "用户长期使用",
+          meta: "后续方向",
+          children: [
+            { id: "p2-1", name: "本地保存", meta: "关闭后仍保留计划" },
+            { id: "p2-2", name: "每天复盘", meta: "记录计划与实际完成" },
+          ],
+        },
+      ];
+
+      const projectBody = document.querySelector("#projectBody");
+      const dropzone = document.querySelector("#dropzone");
+      const casualList = document.querySelector("#casualList");
+      const longTodayList = document.querySelector("#longTodayList");
+      const longList = document.querySelector("#longList");
+      const reviewList = document.querySelector("#reviewList");
+      const listBtn = document.querySelector("#listBtn");
+      const mapBtn = document.querySelector("#mapBtn");
+      const clearBtn = document.querySelector("#clearBtn");
+      const addProjectForm = document.querySelector("#addProjectForm");
+      const casualForm = document.querySelector("#casualForm");
+      const longForm = document.querySelector("#longForm");
+      const longSubmitBtn = document.querySelector("#longSubmitBtn");
+      const cancelLongEditBtn = document.querySelector("#cancelLongEditBtn");
+      const contextMenu = document.querySelector("#contextMenu");
+      const projectNameInput = document.querySelector("#projectNameInput");
+      const projectMetaInput = document.querySelector("#projectMetaInput");
+      const casualInput = document.querySelector("#casualInput");
+      const longNameInput = document.querySelector("#longNameInput");
+      const milestoneDateInput = document.querySelector("#milestoneDateInput");
+      const milestoneTextInput = document.querySelector("#milestoneTextInput");
+      const repeatTypeInput = document.querySelector("#repeatTypeInput");
+      const startDateInput = document.querySelector("#startDateInput");
+      const weekdayInput = document.querySelector("#weekdayInput");
+      const weeklyTimesInput = document.querySelector("#weeklyTimesInput");
+
+      let view = "list";
+      let plan = [];
+      let today = [];
+      let casualTasks = [];
+      let longTasks = [];
+      let mapNodePositions = {};
+      let longTodayDone = {};
+      let editingLongTaskId = null;
+
+      function loadState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+          plan = structuredClone(defaultPlan);
+          today = [];
+          casualTasks = [];
+          longTasks = getDefaultLongTasks();
+          mapNodePositions = {};
+          longTodayDone = {};
+          return;
+        }
+
+        try {
+          const state = JSON.parse(saved);
+          plan = Array.isArray(state.plan) ? state.plan : structuredClone(defaultPlan);
+          today = Array.isArray(state.today) ? state.today : [];
+          casualTasks = Array.isArray(state.casualTasks) ? state.casualTasks : [];
+          longTasks = Array.isArray(state.longTasks) ? state.longTasks : getDefaultLongTasks();
+          mapNodePositions = state.mapNodePositions && typeof state.mapNodePositions === "object" ? state.mapNodePositions : {};
+          longTodayDone = state.longTodayDone && typeof state.longTodayDone === "object" ? state.longTodayDone : {};
+        } catch {
+          plan = structuredClone(defaultPlan);
+          today = [];
+          casualTasks = [];
+          longTasks = getDefaultLongTasks();
+          mapNodePositions = {};
+          longTodayDone = {};
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ plan, today, casualTasks, longTasks, mapNodePositions, longTodayDone })
+        );
+      }
+
+      function getDefaultLongTasks() {
+        return [
+          {
+            id: "l1",
+            name: "背单词",
+            startDate: todayString(),
+            milestone: { date: "", text: "形成稳定复习节奏" },
+            repeat: { type: "memory", weekday: 3, times: 3 },
+          },
+        ];
+      }
+
+      function createId() {
+        return `n-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+      }
+
+      function todayString() {
+        const date = new Date();
+        return toDateString(date);
+      }
+
+      function toDateString(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDate(value) {
+        if (!value) return null;
+        const [year, month, day] = value.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      }
+
+      function addDays(value, days) {
+        const date = parseDate(value);
+        if (!date) return "";
+        date.setDate(date.getDate() + days);
+        return toDateString(date);
+      }
+
+      function daysBetween(start, end) {
+        const startDate = parseDate(start);
+        const endDate = parseDate(end);
+        if (!startDate || !endDate) return null;
+        const dayMs = 24 * 60 * 60 * 1000;
+        return Math.round((endDate - startDate) / dayMs);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function flatten(nodes, parentName = "") {
+        return nodes.flatMap((node) => [
+          { ...node, parentName },
+          ...flatten(node.children || [], node.name),
+        ]);
+      }
+
+      function getFlatPlan() {
+        return flatten(plan);
+      }
+
+      function findNode(id) {
+        return getFlatPlan().find((node) => node.id === id);
+      }
+
+      function findNodeInTree(nodes, id) {
+        for (const node of nodes) {
+          if (node.id === id) return node;
+          const found = findNodeInTree(node.children || [], id);
+          if (found) return found;
+        }
+        return null;
+      }
+
+      function findParentNode(nodes, id, parent = null) {
+        for (const node of nodes) {
+          if (node.id === id) return parent;
+          const found = findParentNode(node.children || [], id, node);
+          if (found !== null) return found;
+        }
+        return null;
+      }
+
+      function removeNodeFromTree(nodes, id) {
+        const index = nodes.findIndex((node) => node.id === id);
+        if (index >= 0) {
+          return nodes.splice(index, 1)[0];
+        }
+
+        for (const node of nodes) {
+          const removed = removeNodeFromTree(node.children || [], id);
+          if (removed) return removed;
+        }
+
+        return null;
+      }
+
+      function collectNodeIds(node) {
+        return [node.id, ...(node.children || []).flatMap(collectNodeIds)];
+      }
+
+      function isDescendant(parentNode, possibleChildId) {
+        return (parentNode.children || []).some(
+          (child) => child.id === possibleChildId || isDescendant(child, possibleChildId)
+        );
+      }
+
+      function editPlanNode(id) {
+        const node = findNodeInTree(plan, id);
+        if (!node) return;
+
+        const name = prompt("修改计划名称", node.name);
+        if (name === null || !name.trim()) return;
+
+        const meta = prompt("修改备注", node.meta || "");
+        if (meta === null) return;
+
+        node.name = name.trim();
+        node.meta = meta.trim() || "未填写备注";
+        saveState();
+        renderAll();
+      }
+
+      function setPlanNodeGoal(id) {
+        const node = findNodeInTree(plan, id);
+        if (!node) return;
+
+        const goal = prompt("设置这个任务的目标", node.goal || "");
+        if (goal === null) return;
+
+        const expectedFinish = prompt("设置期望完成时间（例如 2026-07-31 或 第三周前）", node.expectedFinish || "");
+        if (expectedFinish === null) return;
+
+        node.goal = goal.trim();
+        node.expectedFinish = expectedFinish.trim();
+        saveState();
+        renderAll();
+      }
+
+      function showGoalForm(container, nodeId) {
+        const node = findNodeInTree(plan, nodeId);
+        if (!node) return;
+
+        container.querySelector(".goal-form")?.remove();
+
+        const form = document.createElement("form");
+        form.className = "goal-form";
+        form.innerHTML = `
+          <input name="goal" placeholder="这个任务的目标" autocomplete="off" value="${escapeHtml(node.goal || "")}" />
+          <input name="expectedFinish" placeholder="期望完成时间，比如 2026-07-31" autocomplete="off" value="${escapeHtml(node.expectedFinish || "")}" />
+          <button class="primary" type="submit">保存目标</button>
+        `;
+
+        form.addEventListener("click", (event) => event.stopPropagation());
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          node.goal = form.elements.goal.value.trim();
+          node.expectedFinish = form.elements.expectedFinish.value.trim();
+          saveState();
+          renderAll();
+        });
+
+        container.appendChild(form);
+        form.elements.goal.focus();
+      }
+
+      function renderGoalText(node) {
+        const parts = [];
+        if (node.goal) parts.push(`目标：${escapeHtml(node.goal)}`);
+        if (node.expectedFinish) parts.push(`期望完成：${escapeHtml(node.expectedFinish)}`);
+        if (!parts.length) return "";
+        return `<div class="node-goal">${parts.join("<br />")}</div>`;
+      }
+
+      function renderMindGoalText(node) {
+        const parts = [];
+        if (node.goal) parts.push(`目标：${escapeHtml(node.goal)}`);
+        if (node.expectedFinish) parts.push(`完成：${escapeHtml(node.expectedFinish)}`);
+        if (!parts.length) return "";
+        return `<div class="mind-goal">${parts.join("<br />")}</div>`;
+      }
+
+      function deletePlanNode(id) {
+        const node = findNodeInTree(plan, id);
+        if (!node) return;
+        if (!confirm(`删除「${node.name}」以及它的所有子计划吗？`)) return;
+
+        const removed = removeNodeFromTree(plan, id);
+        if (!removed) return;
+
+        const removedIds = new Set(collectNodeIds(removed));
+        today = today.filter((item) => !removedIds.has(item.id));
+        removedIds.forEach((nodeId) => delete mapNodePositions[nodeId]);
+        saveState();
+        renderAll();
+      }
+
+      function movePlanNode(id, newParentId) {
+        if (id === newParentId) return false;
+        const movingNode = findNodeInTree(plan, id);
+        const newParent = findNodeInTree(plan, newParentId);
+        if (!movingNode || !newParent || isDescendant(movingNode, newParentId)) return false;
+
+        const currentParent = findParentNode(plan, id);
+        if (currentParent?.id === newParentId) return false;
+
+        const removed = removeNodeFromTree(plan, id);
+        if (!removed) return false;
+
+        newParent.children = newParent.children || [];
+        newParent.children.push(removed);
+        saveState();
+        return true;
+      }
+
+      function showContextMenu(event, items) {
+        event.preventDefault();
+        contextMenu.replaceChildren(
+          ...items.map((item) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = item.label;
+            button.addEventListener("click", () => {
+              hideContextMenu();
+              item.action();
+            });
+            return button;
+          })
+        );
+        contextMenu.style.display = "block";
+        contextMenu.style.left = `${Math.min(event.clientX, window.innerWidth - 150)}px`;
+        contextMenu.style.top = `${Math.min(event.clientY, window.innerHeight - 120)}px`;
+      }
+
+      function hideContextMenu() {
+        contextMenu.style.display = "none";
+      }
+
+      function isHighlighted(id) {
+        return today.some((item) => item.id === id);
+      }
+
+      function cleanToday() {
+        const ids = new Set(getFlatPlan().map((node) => node.id));
+        today = today
+          .filter((item) => ids.has(item.id))
+          .map((item, index) => ({
+            id: item.id,
+            done: Boolean(item.done),
+            time: item.time || defaultTimeForIndex(index),
+          }));
+      }
+
+      function dragStart(event, id) {
+        event.dataTransfer.setData("text/plain", id);
+        event.dataTransfer.setData("application/x-plan-node", id);
+        event.dataTransfer.effectAllowed = "copy";
+        event.currentTarget.classList.add("dragging");
+      }
+
+      function dragEnd(event) {
+        event.currentTarget.classList.remove("dragging");
+      }
+
+      function renderListNode(node) {
+        const div = document.createElement("div");
+        div.className = `plan-node ${node.children ? "is-parent" : ""} ${
+          isHighlighted(node.id) ? "is-highlighted" : ""
+        }`;
+        div.draggable = true;
+        div.dataset.id = node.id;
+        div.addEventListener("dragstart", (event) => dragStart(event, node.id));
+        div.addEventListener("dragend", dragEnd);
+        div.addEventListener("contextmenu", (event) => {
+          event.stopPropagation();
+          showContextMenu(event, [
+            { label: "修改计划", action: () => editPlanNode(node.id) },
+            { label: "设置目标/期望时间", action: () => setPlanNodeGoal(node.id) },
+            { label: "删除计划", action: () => deletePlanNode(node.id) },
+          ]);
+        });
+
+        div.innerHTML = `
+          <div class="node-row">
+            <div>
+              <div class="node-name">${escapeHtml(node.name)}</div>
+              <div class="node-meta">${escapeHtml(node.meta || "未填写备注")}</div>
+              ${renderGoalText(node)}
+            </div>
+            <div class="node-actions">
+              ${isHighlighted(node.id) ? '<span class="chip">今日</span>' : ""}
+              <button class="small" type="button" data-add-child="${node.id}">加子计划</button>
+            </div>
+          </div>
+        `;
+
+        div.querySelector("[data-add-child]").addEventListener("click", (event) => {
+          event.stopPropagation();
+          showChildForm(div, node.id);
+        });
+
+        if (node.children?.length) {
+          const children = document.createElement("div");
+          children.className = "children";
+          node.children.forEach((child) => children.appendChild(renderListNode(child)));
+          div.appendChild(children);
+        }
+
+        return div;
+      }
+
+      function showChildForm(container, parentId) {
+        container.querySelector(".child-form")?.remove();
+
+        const form = document.createElement("form");
+        form.className = "child-form";
+        form.innerHTML = `
+          <input name="childName" placeholder="子计划名称" autocomplete="off" />
+          <input name="childMeta" placeholder="备注" autocomplete="off" />
+          <button class="primary" type="submit">添加</button>
+        `;
+
+        form.addEventListener("click", (event) => event.stopPropagation());
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const name = form.elements.childName.value.trim();
+          const meta = form.elements.childMeta.value.trim();
+          if (!name) return;
+
+          const parent = findNodeInTree(plan, parentId);
+          if (!parent) return;
+          parent.children = parent.children || [];
+          parent.children.push({
+            id: createId(),
+            name,
+            meta: meta || "新子计划",
+            children: [],
+          });
+          saveState();
+          renderAll();
+        });
+
+        container.appendChild(form);
+        form.elements.childName.focus();
+      }
+
+      function renderList() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "plan-list";
+        plan.forEach((node) => wrapper.appendChild(renderListNode(node)));
+        projectBody.replaceChildren(wrapper);
+      }
+
+      function renderMap() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "mindmap";
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.classList.add("lines");
+        svg.setAttribute("viewBox", "0 0 920 560");
+
+        const flatPlan = getFlatPlan();
+        const mapPositions = buildMapPositions(plan);
+        const lines = buildMapLines(plan);
+        const mapWidth = Math.max(920, ...Object.values(mapPositions).map(([x]) => x + 210));
+        const mapHeight = Math.max(560, ...Object.values(mapPositions).map(([, y]) => y + 100));
+
+        wrapper.style.minWidth = `${mapWidth}px`;
+        wrapper.style.minHeight = `${mapHeight}px`;
+        svg.setAttribute("viewBox", `0 0 ${mapWidth} ${mapHeight}`);
+
+        lines.forEach(([from, to]) => {
+          const [x1, y1] = mapPositions[from];
+          const [x2, y2] = mapPositions[to];
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.dataset.from = from;
+          line.dataset.to = to;
+          line.setAttribute("x1", String(x1 + 156));
+          line.setAttribute("y1", String(y1 + 29));
+          line.setAttribute("x2", String(x2));
+          line.setAttribute("y2", String(y2 + 29));
+          line.setAttribute("stroke", "#cfd6dd");
+          line.setAttribute("stroke-width", "2");
+          svg.appendChild(line);
+        });
+
+        wrapper.appendChild(svg);
+
+        flatPlan.forEach((node) => {
+          const [x, y] = mapPositions[node.id];
+          const div = document.createElement("div");
+          div.className = `mind-node ${isHighlighted(node.id) ? "is-highlighted" : ""}`;
+          div.dataset.id = node.id;
+          div.style.left = `${x}px`;
+          div.style.top = `${y}px`;
+          div.addEventListener("pointerdown", (event) => startMindNodeMove(event, div, wrapper, svg, mapPositions));
+          div.addEventListener("contextmenu", (event) => {
+            event.stopPropagation();
+            showContextMenu(event, [
+              { label: "修改计划", action: () => editPlanNode(node.id) },
+              { label: "设置目标/期望时间", action: () => setPlanNodeGoal(node.id) },
+              { label: "删除计划", action: () => deletePlanNode(node.id) },
+            ]);
+          });
+          div.innerHTML = `
+            <div class="mind-title">${escapeHtml(node.name)}</div>
+            <div class="mind-note">${isHighlighted(node.id) ? "已安排到今日" : escapeHtml(node.meta || "未填写备注")}</div>
+            ${renderMindGoalText(node)}
+            <div class="mind-actions">
+              <button class="small" type="button" data-add-today="${node.id}">今日</button>
+              <button class="small" type="button" data-add-child="${node.id}">加子计划</button>
+            </div>
+          `;
+          div.querySelector("[data-add-today]").addEventListener("click", (event) => {
+            event.stopPropagation();
+            addToToday(node.id);
+          });
+          div.querySelector("[data-add-child]").addEventListener("click", (event) => {
+            event.stopPropagation();
+            showChildForm(div, node.id);
+          });
+          wrapper.appendChild(div);
+        });
+
+        projectBody.replaceChildren(wrapper);
+      }
+
+      function buildMapPositions(nodes) {
+        const positions = {};
+        let leafIndex = 0;
+
+        function walk(node, depth) {
+          const children = node.children || [];
+          if (!children.length) {
+            const y = 70 + leafIndex * 110;
+            leafIndex += 1;
+            positions[node.id] = [48 + depth * 230, y];
+            return y;
+          }
+
+          const childYs = children.map((child) => walk(child, depth + 1));
+          const y = childYs.reduce((sum, value) => sum + value, 0) / childYs.length;
+          positions[node.id] = [48 + depth * 230, y];
+          return y;
+        }
+
+        nodes.forEach((node) => walk(node, 0));
+        Object.entries(mapNodePositions).forEach(([id, value]) => {
+          if (!positions[id]) return;
+          if (!Array.isArray(value) || value.length !== 2) return;
+          positions[id] = [Number(value[0]) || 0, Number(value[1]) || 0];
+        });
+        return positions;
+      }
+
+      function startMindNodeMove(event, nodeEl, wrapper, svg, positions) {
+        if (event.button !== 0) return;
+        if (event.target.closest("button, input, select, textarea")) return;
+
+        event.preventDefault();
+        const id = nodeEl.dataset.id;
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const [initialX, initialY] = positions[id];
+        const guideX = document.createElement("div");
+        const guideY = document.createElement("div");
+        const dockPreview = document.createElement("div");
+
+        guideX.className = "guide guide-x";
+        guideY.className = "guide guide-y";
+        dockPreview.className = "dock-preview";
+        nodeEl.classList.add("is-moving");
+        wrapper.append(guideX, guideY, dockPreview);
+        nodeEl.setPointerCapture(event.pointerId);
+
+        const move = (moveEvent) => {
+          const rawX = Math.max(16, initialX + moveEvent.clientX - startX);
+          const rawY = Math.max(16, initialY + moveEvent.clientY - startY);
+          const snapped = getSnappedPosition(id, rawX, rawY, positions);
+          latestSnap = snapped;
+
+          positions[id] = [snapped.x, snapped.y];
+          nodeEl.style.left = `${snapped.x}px`;
+          nodeEl.style.top = `${snapped.y}px`;
+          updateAlignmentGuides(guideX, guideY, snapped);
+          updateDockPreview(dockPreview, snapped);
+          updateMapLines(svg, positions);
+          growMindMap(wrapper, svg, positions);
+        };
+
+        const finish = () => {
+          nodeEl.classList.remove("is-moving");
+          guideX.remove();
+          guideY.remove();
+          dockPreview.remove();
+          mapNodePositions[id] = positions[id];
+          const lastPosition = positions[id];
+          const movedToNewParent = latestSnap?.dock?.targetId
+            ? movePlanNode(id, latestSnap.dock.targetId)
+            : false;
+          mapNodePositions[id] = lastPosition;
+          saveState();
+          nodeEl.removeEventListener("pointermove", move);
+          nodeEl.removeEventListener("pointerup", finish);
+          nodeEl.removeEventListener("pointercancel", finish);
+          if (movedToNewParent) renderAll();
+        };
+
+        let latestSnap = null;
+        nodeEl.addEventListener("pointermove", move);
+        nodeEl.addEventListener("pointerup", finish);
+        nodeEl.addEventListener("pointercancel", finish);
+      }
+
+      function getSnappedPosition(id, rawX, rawY, positions) {
+        const grid = 20;
+        const threshold = 14;
+        const dockThreshold = 86;
+        const nodeWidth = 156;
+        const nodeHeight = 78;
+        const horizontalGap = 46;
+        const verticalGap = 32;
+        let x = Math.round(rawX / grid) * grid;
+        let y = Math.round(rawY / grid) * grid;
+        let guideX = null;
+        let guideY = null;
+        let dock = null;
+        let bestDockDistance = Infinity;
+        const movingNode = findNodeInTree(plan, id);
+
+        Object.entries(positions).forEach(([otherId, [otherX, otherY]]) => {
+          if (otherId === id) return;
+          const canDockToTarget = movingNode && !isDescendant(movingNode, otherId);
+
+          if (canDockToTarget) {
+            const dockCandidates = [
+              { x: otherX + nodeWidth + horizontalGap, y: otherY, side: "right", targetId: otherId },
+              { x: otherX - nodeWidth - horizontalGap, y: otherY, side: "left", targetId: otherId },
+              { x: otherX, y: otherY - nodeHeight - verticalGap, side: "top", targetId: otherId },
+              { x: otherX, y: otherY + nodeHeight + verticalGap, side: "bottom", targetId: otherId },
+            ];
+
+            dockCandidates.forEach((candidate) => {
+              const distance = Math.hypot(rawX - candidate.x, rawY - candidate.y);
+              if (distance < dockThreshold && distance < bestDockDistance) {
+                bestDockDistance = distance;
+                dock = candidate;
+              }
+            });
+          }
+
+          if (Math.abs(rawX - otherX) <= threshold) {
+            x = otherX;
+            guideX = otherX;
+          }
+
+          if (Math.abs(rawY - otherY) <= threshold) {
+            y = otherY;
+            guideY = otherY;
+          }
+        });
+
+        if (dock) {
+          x = Math.max(16, dock.x);
+          y = Math.max(16, dock.y);
+          guideX = dock.side === "top" || dock.side === "bottom" ? x : null;
+          guideY = dock.side === "left" || dock.side === "right" ? y : null;
+        }
+
+        return { x, y, guideX, guideY, dock };
+      }
+
+      function updateAlignmentGuides(guideX, guideY, snapped) {
+        guideX.style.display = snapped.guideX === null ? "none" : "block";
+        guideY.style.display = snapped.guideY === null ? "none" : "block";
+
+        if (snapped.guideX !== null) guideX.style.left = `${snapped.guideX}px`;
+        if (snapped.guideY !== null) guideY.style.top = `${snapped.guideY + 29}px`;
+      }
+
+      function updateDockPreview(dockPreview, snapped) {
+        dockPreview.style.display = snapped.dock ? "block" : "none";
+        if (!snapped.dock) return;
+
+        dockPreview.style.left = `${snapped.x}px`;
+        dockPreview.style.top = `${snapped.y}px`;
+      }
+
+      function updateMapLines(svg, positions) {
+        svg.querySelectorAll("line").forEach((line) => {
+          const from = line.dataset.from;
+          const to = line.dataset.to;
+          const [x1, y1] = positions[from];
+          const [x2, y2] = positions[to];
+          line.setAttribute("x1", String(x1 + 156));
+          line.setAttribute("y1", String(y1 + 29));
+          line.setAttribute("x2", String(x2));
+          line.setAttribute("y2", String(y2 + 29));
+        });
+      }
+
+      function growMindMap(wrapper, svg, positions) {
+        const mapWidth = Math.max(920, ...Object.values(positions).map(([x]) => x + 210));
+        const mapHeight = Math.max(560, ...Object.values(positions).map(([, y]) => y + 120));
+        wrapper.style.minWidth = `${mapWidth}px`;
+        wrapper.style.minHeight = `${mapHeight}px`;
+        svg.setAttribute("viewBox", `0 0 ${mapWidth} ${mapHeight}`);
+      }
+
+      function buildMapLines(nodes) {
+        const lines = [];
+
+        function walk(node) {
+          (node.children || []).forEach((child) => {
+            lines.push([node.id, child.id]);
+            walk(child);
+          });
+        }
+
+        nodes.forEach(walk);
+        return lines;
+      }
+
+      function renderProject() {
+        listBtn.classList.toggle("active", view === "list");
+        mapBtn.classList.toggle("active", view === "map");
+        if (view === "list") renderList();
+        if (view === "map") renderMap();
+      }
+
+      function renderToday() {
+        cleanToday();
+        if (!today.length) {
+          dropzone.innerHTML = '<div class="empty">从左侧项目计划拖动一个节点到这里</div>';
+          return;
+        }
+
+        dropzone.replaceChildren(
+          ...today.map((item, index) => {
+            const node = findNode(item.id);
+            const div = document.createElement("div");
+            div.className = `today-item ${item.done ? "done" : ""}`;
+            div.draggable = true;
+            div.dataset.todayIndex = String(index);
+            div.addEventListener("dragstart", (event) => {
+              if (event.target.closest("input, button")) {
+                event.preventDefault();
+                return;
+              }
+              event.dataTransfer.setData("application/x-today-index", String(index));
+              event.dataTransfer.effectAllowed = "move";
+              div.classList.add("dragging");
+            });
+            div.addEventListener("dragend", () => div.classList.remove("dragging"));
+            div.innerHTML = `
+              <input type="checkbox" ${item.done ? "checked" : ""} data-toggle-today="${item.id}" />
+              <div>
+                <strong>${index + 1}. ${escapeHtml(node.name)}</strong>
+                <span>${node.parentName ? `${escapeHtml(node.parentName)} / ` : ""}${escapeHtml(node.meta || "未填写备注")}</span>
+                ${renderGoalText(node)}
+              </div>
+              <input class="today-time" type="time" value="${escapeHtml(item.time || "")}" data-time-today="${item.id}" />
+            `;
+            return div;
+          })
+        );
+      }
+
+      function renderCasualTasks() {
+        if (!casualTasks.length) {
+          casualList.innerHTML = '<div class="empty">随手加一点今天的临时任务</div>';
+          return;
+        }
+
+        casualList.replaceChildren(
+          ...casualTasks.map((task) => {
+            const div = document.createElement("div");
+            div.className = `casual-item ${task.done ? "done" : ""}`;
+            div.innerHTML = `
+              <input type="checkbox" ${task.done ? "checked" : ""} data-toggle-casual="${task.id}" />
+              <span>${escapeHtml(task.title)}</span>
+              <button class="small" type="button" data-delete-casual="${task.id}">删除</button>
+            `;
+            return div;
+          })
+        );
+      }
+
+      function getRepeatText(task) {
+        const repeat = task.repeat || { type: "none" };
+        if (repeat.type === "weekly-day") return `每周${WEEKDAY_NAMES[Number(repeat.weekday)]}`;
+        if (repeat.type === "weekly-times") return `每周 ${repeat.times || 1} 次`;
+        if (repeat.type === "memory") return "记忆曲线：当天、1、3、7、14、30天";
+        return "不重复";
+      }
+
+      function getDueReviews() {
+        const today = todayString();
+        return longTasks.flatMap((task) => {
+          if (task.repeat?.type !== "memory") return [];
+          const diff = daysBetween(task.startDate, today);
+          if (diff === null || !MEMORY_INTERVALS.includes(diff)) return [];
+          return [
+            {
+              task,
+              originDate: task.startDate,
+              interval: diff,
+            },
+          ];
+        });
+      }
+
+      function getTodayLongItems() {
+        const today = todayString();
+        const todayWeekday = new Date().getDay();
+        const items = [];
+
+        longTasks.forEach((task) => {
+          const repeat = task.repeat || { type: "none" };
+          const milestone = task.milestone || {};
+
+          if (repeat.type === "memory") {
+            const diff = daysBetween(task.startDate, today);
+            if (diff !== null && MEMORY_INTERVALS.includes(diff)) {
+              items.push({
+                id: `${task.id}-memory-${diff}`,
+                title: task.name,
+                text: `复习 ${task.startDate} 的内容，第 ${diff} 天复习。`,
+              });
+            }
+          }
+
+          if (repeat.type === "weekly-day" && Number(repeat.weekday) === todayWeekday) {
+            items.push({
+              id: `${task.id}-weekday`,
+              title: task.name,
+              text: `今天是${WEEKDAY_NAMES[todayWeekday]}，按设定今天重复。`,
+            });
+          }
+
+          if (repeat.type === "weekly-times") {
+            items.push({
+              id: `${task.id}-weekly-times`,
+              title: task.name,
+              text: `本周目标：完成 ${repeat.times || 1} 次。今天可以安排其中一次。`,
+            });
+          }
+
+          if (milestone.date === today) {
+            items.push({
+              id: `${task.id}-milestone`,
+              title: task.name,
+              text: `里程碑今天到期：达到 ${milestone.text || "设定目标"}。`,
+            });
+          }
+        });
+
+        return items;
+      }
+
+      function renderReviews() {
+        const today = todayString();
+        const items = getTodayLongItems().filter((item) => item.id.includes("memory") || item.id.includes("weekday"));
+
+        if (!items.length) {
+          reviewList.innerHTML = `<div class="empty">${today} 暂时没有到期复习</div>`;
+          return;
+        }
+
+        reviewList.replaceChildren(
+          ...items.map((item) => {
+            const div = document.createElement("div");
+            div.className = "review-item";
+            div.innerHTML = `<strong>${escapeHtml(item.title)}</strong><br />${escapeHtml(item.text)}`;
+            return div;
+          })
+        );
+      }
+
+      function renderLongTodayTasks() {
+        const items = getTodayLongItems();
+        if (!items.length) {
+          longTodayList.innerHTML = '<div class="empty">今天暂时没有长期主义任务</div>';
+          return;
+        }
+
+        longTodayList.replaceChildren(
+          ...items.map((item) => {
+            const div = document.createElement("div");
+            div.className = `long-today-item ${longTodayDone[item.id] ? "done" : ""}`;
+            div.innerHTML = `
+              <input type="checkbox" ${longTodayDone[item.id] ? "checked" : ""} data-toggle-long-today="${item.id}" />
+              <div>
+                <strong>${escapeHtml(item.title)}</strong><br />
+                <span>${escapeHtml(item.text)}</span>
+              </div>
+            `;
+            return div;
+          })
+        );
+      }
+
+      function renderLongTasks() {
+        if (!longTasks.length) {
+          longList.innerHTML = '<div class="empty">添加一个长期任务，给它一个里程碑和节奏</div>';
+          return;
+        }
+
+        longList.replaceChildren(
+          ...longTasks.map((task) => {
+            const milestone = task.milestone || {};
+            const div = document.createElement("div");
+            div.className = "long-item";
+            div.addEventListener("contextmenu", (event) => {
+              showContextMenu(event, [
+                { label: "修改长期任务", action: () => startEditLongTask(task.id) },
+                { label: "删除长期任务", action: () => deleteLongTask(task.id) },
+              ]);
+            });
+            div.innerHTML = `
+              <h3>${escapeHtml(task.name)}</h3>
+              <div class="long-meta">开始：${escapeHtml(task.startDate || "未设置")} · ${escapeHtml(getRepeatText(task))}</div>
+              ${
+                milestone.text || milestone.date
+                  ? `<div class="milestone">里程碑：${escapeHtml(milestone.date || "某天")} 达到 ${escapeHtml(milestone.text || "未填写目标")}</div>`
+                  : ""
+              }
+              ${
+                task.repeat?.type === "weekly-times"
+                  ? `<div class="milestone">本周目标：完成 ${escapeHtml(task.repeat.times || 1)} 次，后面可以继续加打卡记录。</div>`
+                  : ""
+              }
+            `;
+            return div;
+          })
+        );
+      }
+
+      function addToToday(id) {
+        if (!today.some((item) => item.id === id)) {
+          today.push({ id, done: false, time: defaultTimeForIndex(today.length) });
+          saveState();
+          renderAll();
+        }
+      }
+
+      function startEditLongTask(id) {
+        const task = longTasks.find((item) => item.id === id);
+        if (!task) return;
+
+        editingLongTaskId = id;
+        longNameInput.value = task.name || "";
+        milestoneDateInput.value = task.milestone?.date || "";
+        milestoneTextInput.value = task.milestone?.text || "";
+        repeatTypeInput.value = task.repeat?.type || "none";
+        weekdayInput.value = String(task.repeat?.weekday ?? 1);
+        weeklyTimesInput.value = String(task.repeat?.times || 3);
+        startDateInput.value = task.startDate || todayString();
+        longSubmitBtn.textContent = "保存修改";
+        cancelLongEditBtn.hidden = false;
+        longNameInput.focus();
+      }
+
+      function resetLongForm() {
+        editingLongTaskId = null;
+        longNameInput.value = "";
+        milestoneDateInput.value = "";
+        milestoneTextInput.value = "";
+        repeatTypeInput.value = "none";
+        weeklyTimesInput.value = "3";
+        startDateInput.value = todayString();
+        longSubmitBtn.textContent = "添加长期任务";
+        cancelLongEditBtn.hidden = true;
+      }
+
+      function deleteLongTask(id) {
+        const task = longTasks.find((item) => item.id === id);
+        if (!task) return;
+        if (!confirm(`删除长期任务「${task.name}」吗？`)) return;
+
+        longTasks = longTasks.filter((item) => item.id !== id);
+        Object.keys(longTodayDone).forEach((key) => {
+          if (key.startsWith(`${id}-`)) delete longTodayDone[key];
+        });
+        if (editingLongTaskId === id) resetLongForm();
+        saveState();
+        renderAll();
+      }
+
+      function defaultTimeForIndex(index) {
+        const hour = Math.min(23, 9 + index);
+        return `${String(hour).padStart(2, "0")}:00`;
+      }
+
+      function getTodayDropIndex(event) {
+        const item = event.target.closest(".today-item");
+        if (!item) return today.length;
+
+        const index = Number(item.dataset.todayIndex);
+        const rect = item.getBoundingClientRect();
+        return event.clientY > rect.top + rect.height / 2 ? index + 1 : index;
+      }
+
+      function moveTodayItem(fromIndex, toIndex) {
+        if (fromIndex < 0 || fromIndex >= today.length) return;
+        const [item] = today.splice(fromIndex, 1);
+        const adjustedIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+        today.splice(Math.max(0, Math.min(adjustedIndex, today.length)), 0, item);
+        saveState();
+        renderAll();
+      }
+
+      function renderAll() {
+        renderToday();
+        renderLongTodayTasks();
+        renderCasualTasks();
+        renderReviews();
+        renderLongTasks();
+        renderProject();
+      }
+
+      dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropzone.classList.add("over");
+        event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("application/x-today-index")
+          ? "move"
+          : "copy";
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("over");
+      });
+
+      dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropzone.classList.remove("over");
+        const todayIndex = event.dataTransfer.getData("application/x-today-index");
+        if (todayIndex !== "") {
+          moveTodayItem(Number(todayIndex), getTodayDropIndex(event));
+          return;
+        }
+
+        const id =
+          event.dataTransfer.getData("application/x-plan-node") ||
+          event.dataTransfer.getData("text/plain");
+        if (id) addToToday(id);
+      });
+
+      listBtn.addEventListener("click", () => {
+        view = "list";
+        renderProject();
+      });
+
+      mapBtn.addEventListener("click", () => {
+        view = "map";
+        renderProject();
+      });
+
+      clearBtn.addEventListener("click", () => {
+        today = [];
+        saveState();
+        renderAll();
+      });
+
+      dropzone.addEventListener("change", (event) => {
+        const toggleId = event.target.dataset.toggleToday;
+        if (toggleId) {
+          const item = today.find((task) => task.id === toggleId);
+          if (!item) return;
+          item.done = event.target.checked;
+          saveState();
+          renderAll();
+          return;
+        }
+
+        const timeId = event.target.dataset.timeToday;
+        if (!timeId) return;
+        const item = today.find((task) => task.id === timeId);
+        if (!item) return;
+        item.time = event.target.value;
+        saveState();
+        renderAll();
+      });
+
+      addProjectForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = projectNameInput.value.trim();
+        const meta = projectMetaInput.value.trim();
+        if (!name) return;
+
+        plan.push({
+          id: createId(),
+          name,
+          meta: meta || "新项目",
+          children: [],
+        });
+
+        projectNameInput.value = "";
+        projectMetaInput.value = "";
+        saveState();
+        renderAll();
+      });
+
+      casualForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const title = casualInput.value.trim();
+        if (!title) return;
+
+        casualTasks.push({ id: createId(), title, done: false, date: todayString() });
+        casualInput.value = "";
+        saveState();
+        renderAll();
+      });
+
+      casualList.addEventListener("change", (event) => {
+        const id = event.target.dataset.toggleCasual;
+        if (!id) return;
+        const task = casualTasks.find((item) => item.id === id);
+        if (!task) return;
+        task.done = event.target.checked;
+        saveState();
+        renderAll();
+      });
+
+      casualList.addEventListener("click", (event) => {
+        const id = event.target.dataset.deleteCasual;
+        if (!id) return;
+        casualTasks = casualTasks.filter((task) => task.id !== id);
+        saveState();
+        renderAll();
+      });
+
+      longTodayList.addEventListener("change", (event) => {
+        const id = event.target.dataset.toggleLongToday;
+        if (!id) return;
+        longTodayDone[id] = event.target.checked;
+        saveState();
+        renderAll();
+      });
+
+      longForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = longNameInput.value.trim();
+        if (!name) return;
+
+        const payload = {
+          name,
+          startDate: startDateInput.value || todayString(),
+          milestone: {
+            date: milestoneDateInput.value,
+            text: milestoneTextInput.value.trim(),
+          },
+          repeat: {
+            type: repeatTypeInput.value,
+            weekday: Number(weekdayInput.value),
+            times: Number(weeklyTimesInput.value || 1),
+          },
+        };
+
+        if (editingLongTaskId) {
+          const task = longTasks.find((item) => item.id === editingLongTaskId);
+          if (task) Object.assign(task, payload);
+        } else {
+          longTasks.push({ id: createId(), ...payload });
+        }
+
+        resetLongForm();
+        saveState();
+        renderAll();
+      });
+
+      cancelLongEditBtn.addEventListener("click", () => {
+        resetLongForm();
+      });
+
+      document.addEventListener("click", hideContextMenu);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") hideContextMenu();
+      });
+
+      startDateInput.value = todayString();
+      loadState();
+      renderAll();
+    </script>
+  </body>
+</html>
